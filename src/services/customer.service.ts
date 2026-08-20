@@ -14,7 +14,7 @@ export const CustomerService = {
     const existing = await prisma.user.findUnique({ where: { email }, select: { id: true } });
     if (existing) throw conflict('An account with this email already exists.');
 
-    return prisma.user.create({
+    const user = await prisma.user.create({
       data: {
         email,
         passwordHash: await hashPassword(input.password),
@@ -26,6 +26,9 @@ export const CustomerService = {
       },
       select: { id: true, email: true, role: true, firstName: true, lastName: true },
     });
+
+    await this.claimGuestOrders(user.id, user.email);
+    return user;
   },
 
   /**
@@ -45,7 +48,41 @@ export const CustomerService = {
     if (!(await verifyPassword(password, user.passwordHash))) return null;
 
     await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
+    await this.claimGuestOrders(user.id, user.email);
     return { id: user.id, email: user.email, role: user.role, firstName: user.firstName, lastName: user.lastName };
+  },
+
+  /**
+   * Connects previous guest orders to a customer account once the customer
+   * proves ownership of that email through our own login/register flow.
+   *
+   * Cashfree's phone login is not the same thing as a YDURYA account session,
+   * so we only claim by email here. Phone-only matching would let an unverified
+   * profile phone expose another person's orders.
+   */
+  async claimGuestOrders(userId: string, email: string): Promise<number> {
+    const normalized = email.trim().toLowerCase();
+    if (!normalized) return 0;
+
+    return prisma.$transaction(async (tx) => {
+      const orders = await tx.order.findMany({
+        where: { userId: null, email: normalized },
+        select: { id: true },
+      });
+      if (orders.length === 0) return 0;
+
+      const orderIds = orders.map((order) => order.id);
+      await tx.order.updateMany({
+        where: { id: { in: orderIds }, userId: null },
+        data: { userId },
+      });
+      await tx.couponUsage.updateMany({
+        where: { orderId: { in: orderIds }, userId: null },
+        data: { userId },
+      });
+
+      return orderIds.length;
+    });
   },
 
   /**

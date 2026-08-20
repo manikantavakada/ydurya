@@ -8,7 +8,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQueryClient } from '@tanstack/react-query';
-import { Banknote, CreditCard, Lock, ShieldCheck } from 'lucide-react';
+import { Banknote, CreditCard, Loader2, Lock, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Field, Input, Textarea } from '@/components/ui/input';
 import { useToast } from '@/components/ui/toast';
@@ -17,7 +17,7 @@ import { useCart } from '@/hooks/use-cart';
 import { addressSchema, emailSchema, phoneSchema } from '@/lib/validation';
 import { formatPaise } from '@/lib/money';
 import { rupees, track } from '@/lib/analytics';
-import { isCashfreeSdkConfigured, openCashfreeCheckout } from '@/lib/cashfree/sdk';
+import { isCashfreeSdkConfigured, openCashfreeCheckout, preloadCashfreeCheckout } from '@/lib/cashfree/sdk';
 import { isFastrrSdkConfigured, openFastrrCheckout } from '@/lib/fastrr/sdk';
 import { cn } from '@/lib/utils';
 import type { OrderDTO } from '@/types';
@@ -38,6 +38,7 @@ const formSchema = z.object({
 const formSchemaNoAddress = formSchema.omit({ address: true });
 
 type FormValues = z.input<typeof formSchema>;
+type SubmitStage = 'creating-order' | 'opening-payment' | 'redirecting' | 'confirming';
 
 export interface SavedAddress {
   id: string;
@@ -88,6 +89,7 @@ export function CheckoutForm({
   const { data: cart, isLoading } = useCart();
 
   const [submitting, setSubmitting] = React.useState(false);
+  const [submitStage, setSubmitStage] = React.useState<SubmitStage | null>(null);
   const [selectedAddressId, setSelectedAddressId] = React.useState<string | null>(
     savedAddresses.find((a) => a.isDefault)?.id ?? savedAddresses[0]?.id ?? null,
   );
@@ -160,6 +162,12 @@ export function CheckoutForm({
     );
   }, [gatewayCollectsAddress, paymentMethod, hasKnownAddress]);
 
+  React.useEffect(() => {
+    if (paymentMethod === 'PREPAID' && prepaidAvailable) {
+      preloadCashfreeCheckout();
+    }
+  }, [paymentMethod, prepaidAvailable]);
+
   // Fill the form when the customer picks a different saved address.
   // Not a hook — named `apply…` so it cannot be mistaken for one.
   const applySavedAddress = (address: SavedAddress) => {
@@ -178,6 +186,7 @@ export function CheckoutForm({
   const onSubmit = async (values: FormValues) => {
     if (submitting) return;
     setSubmitting(true);
+    setSubmitStage('creating-order');
 
     try {
       track({
@@ -220,6 +229,7 @@ export function CheckoutForm({
             id: i.id, name: i.productName, price: rupees(i.unitPricePaise), quantity: i.quantity,
           })),
         });
+        setSubmitStage('confirming');
         router.push(`/checkout/confirmation/${order.orderNumber}`);
         return;
       }
@@ -235,6 +245,7 @@ export function CheckoutForm({
       });
       const payJson = await payRes.json().catch(() => ({}));
       const clientConfig = payJson.clientConfig as { paymentSessionId?: string; token?: string } | undefined;
+      setSubmitStage('opening-payment');
 
       // 1. Cashfree's checkout modal, opened in-page with the session our
       // server just created (POST /orders).
@@ -257,12 +268,14 @@ export function CheckoutForm({
 
       // 3. A hosted redirect, if the gateway gave us one.
       if (payRes.ok && payJson.redirectUrl) {
+        setSubmitStage('redirecting');
         window.location.href = payJson.redirectUrl as string;
         return;
       }
 
       // 4. Nothing is available. The order exists and is awaiting payment;
       // the confirmation page says exactly that rather than implying success.
+      setSubmitStage('confirming');
       router.push(`/checkout/confirmation/${order.orderNumber}`);
     } catch (err) {
       toast({
@@ -270,11 +283,19 @@ export function CheckoutForm({
         variant: 'error',
       });
       setSubmitting(false);
+      setSubmitStage(null);
     }
   };
 
   if (isLoading) {
-    return <div className="container py-16 text-center text-sm text-muted">Loading your bag…</div>;
+    return (
+      <div className="container grid min-h-[360px] place-items-center py-16 text-center text-sm text-muted" role="status">
+        <span className="inline-flex items-center gap-2">
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+          Loading your bag...
+        </span>
+      </div>
+    );
   }
 
   if (!cart || cart.lines.length === 0) {
@@ -524,6 +545,13 @@ export function CheckoutForm({
               {paymentMethod === 'COD' ? 'Place order' : `Pay ${formatPaise(projectedTotal)}`}
             </Button>
 
+            {submitting && (
+              <p className="mt-3 inline-flex items-center gap-2 text-xs text-muted" role="status" aria-live="polite">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                {stageLabel(submitStage, paymentMethod)}
+              </p>
+            )}
+
             <p className="mt-3 flex items-start gap-1.5 text-2xs text-muted">
               <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
               Your total is confirmed on our server before payment. We never store card details.
@@ -533,6 +561,13 @@ export function CheckoutForm({
       </div>
     </form>
   );
+}
+
+function stageLabel(stage: SubmitStage | null, paymentMethod: string): string {
+  if (stage === 'opening-payment') return 'Opening secure payment...';
+  if (stage === 'redirecting') return 'Taking you to payment...';
+  if (stage === 'confirming') return 'Confirming your order...';
+  return paymentMethod === 'COD' ? 'Placing your order...' : 'Creating your order...';
 }
 
 function Step({ number, title, children }: { number: number; title: string; children: React.ReactNode }) {

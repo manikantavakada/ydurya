@@ -7,6 +7,7 @@ import { toDecimal, toPaise } from '@/lib/money';
 import { CashfreeProvider } from './payment/cashfree.provider';
 import { FastrrProvider } from './payment/fastrr.provider';
 import { ManualProvider } from './payment/manual.provider';
+import { CustomerService } from './customer.service';
 import type { PaymentProvider, WebhookResult } from './payment/types';
 
 export type { PaymentProvider, WebhookResult };
@@ -326,6 +327,8 @@ export const PaymentService = {
       const collected = await gateway.fetchCollectedDetails(providerOrderId);
       if (!collected) return;
 
+      const customerEmail = collected.customerEmail?.trim().toLowerCase() || null;
+
       await prisma.order.update({
         where: { id: orderId },
         data: {
@@ -335,10 +338,20 @@ export const PaymentService = {
           // A guest's real contact details only exist once Cashfree has them.
           // Written over the placeholders the express route opened with, so
           // order tracking and delivery updates reach the actual customer.
-          ...(collected.customerEmail ? { email: collected.customerEmail } : {}),
+          ...(customerEmail ? { email: customerEmail } : {}),
           ...(collected.customerPhone ? { phone: collected.customerPhone } : {}),
         },
       });
+
+      if (customerEmail) {
+        const customer = await prisma.user.findUnique({
+          where: { email: customerEmail },
+          select: { id: true, isActive: true, deletedAt: true },
+        });
+        if (customer?.isActive && !customer.deletedAt) {
+          await CustomerService.claimGuestOrders(customer.id, customerEmail);
+        }
+      }
     } catch (err) {
       console.error('[payments] capturing OCC address failed', { orderId }, err);
     }

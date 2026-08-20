@@ -45,6 +45,12 @@ function loadSdk(): Promise<CashfreeInstance> {
   return loader;
 }
 
+/** Warms the Cashfree SDK chunk before the customer taps Pay. */
+export function preloadCashfreeCheckout(): void {
+  if (typeof window === 'undefined' || !isCashfreeSdkConfigured()) return;
+  void loadSdk().catch(() => undefined);
+}
+
 export interface CashfreeResult {
   opened: boolean;
   reason?: string;
