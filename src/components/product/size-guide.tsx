@@ -1,16 +1,17 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import { Ruler } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 /**
  * Size guide.
  *
- * The live store publishes S/M/L/XL but no measurement chart, so no
- * measurements are invented here. The panel explains the fit language the
- * product descriptions actually use, and the chart becomes available once
- * measurements are entered in the admin.
+ * The measurement chart is YDURYA's own — brand size against chest, shoulder,
+ * front length and sleeve length in inches, with the ± 0.5" tolerance from
+ * manual measurement. The fit language below it explains the cut, not the
+ * numbers, so both stay useful together.
  */
 export function SizeGuide({ fit }: { fit?: string | null }) {
   return (
@@ -27,15 +28,14 @@ export function SizeGuide({ fit }: { fit?: string | null }) {
 
       <SheetContent side="bottom" title="Size guide" className="lg:inset-y-0 lg:right-0 lg:left-auto lg:max-h-none lg:max-w-md lg:rounded-none">
         <div className="space-y-6 pb-4">
-          <div>
-            <h3 className="mb-2 font-serif text-base">Available sizes</h3>
-            <div className="flex gap-2">
-              {['S', 'M', 'L', 'XL'].map((s) => (
-                <span key={s} className="grid h-11 w-11 place-items-center rounded-md border border-ink/15 text-sm">
-                  {s}
-                </span>
-              ))}
-            </div>
+          <div className="relative aspect-[1200/734] w-full overflow-hidden rounded-md bg-surface">
+            <Image
+              src="/images/brand/size-chart.webp"
+              alt="YDURYA size chart — brand size against chest, shoulder, front length and sleeve length in inches, ± 0.5 inch tolerance"
+              fill
+              sizes="(min-width:1024px) 448px, 100vw"
+              className="object-contain"
+            />
           </div>
 
           {fit && (
@@ -62,8 +62,8 @@ export function SizeGuide({ fit }: { fit?: string | null }) {
           </div>
 
           <p className="rounded-md bg-surface p-3 text-xs text-muted">
-            Detailed measurements are not published for this style yet. If you are between sizes,
-            size up for a boxy fit or stay true to size for a regular fit.
+            Measurements may vary by ± 0.5 inch. If you are between sizes, size up for a boxy fit
+            or stay true to size for a regular fit.
           </p>
         </div>
       </SheetContent>

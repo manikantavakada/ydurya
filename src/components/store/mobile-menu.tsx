@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { ChevronRight, Heart, Package, User } from 'lucide-react';
 import { Sheet, SheetContent, SheetClose } from '@/components/ui/sheet';
@@ -18,8 +19,15 @@ export function MobileMenu({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="left" title="Menu" hideTitle className="max-w-[86vw] sm:max-w-sm">
-        <p className="font-display text-xl font-bold tracking-luxe">{BRAND.name}</p>
-        <p className="mt-1 text-2xs uppercase tracking-luxe text-muted">{BRAND.tagline}</p>
+        <Image
+          src="/images/brand/logo.webp"
+          alt={BRAND.name}
+          width={900}
+          height={300}
+          priority
+          className="h-9 w-auto"
+        />
+        <p className="mt-1.5 text-2xs uppercase tracking-luxe text-muted">{BRAND.tagline}</p>
 
         <nav className="mt-7" aria-label="Mobile">
           <ul className="space-y-0.5">

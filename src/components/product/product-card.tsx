@@ -2,22 +2,18 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import * as React from 'react';
-import { Heart, Plus } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Price } from '@/components/ui/price';
-import { QuickAddSheet } from './quick-add-sheet';
 import type { ProductCardDTO } from '@/types';
 
 /**
  * The storefront's core tile.
  *
  * • Image swap on hover (desktop) mirrors the live theme's `image-swap` tag.
- * • Quick add opens a size sheet rather than guessing a variant — a shirt with
- *   four sizes has no sensible default.
  * • The whole card is one link with an overlay, so the tap target is the full
- *   tile on mobile while the wishlist/quick-add controls stay separately
- *   focusable for keyboard users.
+ *   tile on mobile while the wishlist control stays separately focusable for
+ *   keyboard users.
  */
 export function ProductCard({
   product,
@@ -34,7 +30,6 @@ export function ProductCard({
   className?: string;
   sizes?: string;
 }) {
-  const [quickAddOpen, setQuickAddOpen] = React.useState(false);
   const href = `/product/${product.slug}`;
   const hasHover = Boolean(product.hoverImage && !product.hoverImage.isPlaceholder);
 
@@ -82,20 +77,16 @@ export function ProductCard({
           </div>
         </Link>
 
-        {/* Badges */}
-        <div className="pointer-events-none absolute left-2.5 top-2.5 flex flex-col items-start gap-1.5">
-          {product.discountPercent != null && product.discountPercent > 0 && (
-            <span className="rounded-sm bg-ink px-1.5 py-1 text-2xs font-semibold uppercase tracking-wide2 text-bg">
-              {product.discountPercent}% off
-            </span>
-          )}
+        {/* Badges — discount already appears beside the price below, so only
+            the merchandising flags (best seller / new) show on the image. */}
+        <div className="pointer-events-none absolute inset-x-2 bottom-2 flex items-end justify-start gap-1">
           {product.isBestSeller && (
-            <span className="rounded-sm bg-gold px-1.5 py-1 text-2xs font-semibold uppercase tracking-wide2 text-white">
+            <span className="rounded-sm bg-gold px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white">
               Best seller
             </span>
           )}
           {!product.isBestSeller && product.isNewArrival && (
-            <span className="rounded-sm bg-bg/90 px-1.5 py-1 text-2xs font-semibold uppercase tracking-wide2 text-ink">
+            <span className="rounded-sm bg-bg/90 px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-ink">
               New
             </span>
           )}
@@ -123,36 +114,11 @@ export function ProductCard({
             <Heart className={cn('h-[18px] w-[18px]', isWishlisted && 'fill-danger text-danger')} aria-hidden />
           </button>
         )}
-
-        {/* Quick add. Always reachable on touch; slides up on desktop hover. */}
-        {product.inStock && (
-          <div
-            className={cn(
-              'absolute inset-x-2.5 bottom-2.5 z-10',
-              'lg:translate-y-[130%] lg:opacity-0 lg:transition-[transform,opacity] lg:duration-300',
-              'lg:group-hover:translate-y-0 lg:group-hover:opacity-100 lg:group-focus-within:translate-y-0 lg:group-focus-within:opacity-100',
-            )}
-          >
-            <button
-              type="button"
-              onClick={() => setQuickAddOpen(true)}
-              className={cn(
-                'flex h-10 w-full items-center justify-center gap-1.5 rounded-md bg-bg/95 backdrop-blur',
-                'text-2xs font-semibold uppercase tracking-wide2 text-ink shadow-card',
-                'transition-colors hover:bg-ink hover:text-bg',
-              )}
-            >
-              <Plus className="h-3.5 w-3.5" aria-hidden />
-              Quick add
-              <span className="sr-only"> — {product.name}</span>
-            </button>
-          </div>
-        )}
       </div>
 
       <div className="mt-3 flex flex-col gap-1">
         <h3 className="text-sm leading-snug">
-          <Link href={href} className="line-clamp-2-safe font-sans text-ink after:absolute after:inset-0 after:content-['']">
+          <Link href={href} className="block truncate font-sans text-ink after:absolute after:inset-0 after:content-['']">
             {product.name}
           </Link>
         </h3>
@@ -180,10 +146,6 @@ export function ProductCard({
           </p>
         )}
       </div>
-
-      {quickAddOpen && (
-        <QuickAddSheet product={product} open={quickAddOpen} onOpenChange={setQuickAddOpen} />
-      )}
     </article>
   );
 }

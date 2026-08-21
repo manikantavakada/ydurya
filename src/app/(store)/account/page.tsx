@@ -39,14 +39,14 @@ export default async function AccountPage() {
 
       <div className="lg:grid lg:grid-cols-[220px_1fr] lg:gap-12">
         <nav aria-label="Account" className="mb-8 lg:mb-0">
-          <ul className="flex gap-2 overflow-x-auto no-scrollbar lg:flex-col lg:gap-0.5">
+          <ul className="flex flex-col gap-0.5">
             {[
               { href: '/account', label: 'Overview', Icon: User, current: true },
               { href: '/account/orders', label: 'Orders', Icon: Package, badge: orders.total },
               { href: '/account/addresses', label: 'Addresses', Icon: MapPin },
               { href: '/wishlist', label: 'Wishlist', Icon: Heart, badge: wishlistIds.length },
             ].map(({ href, label, Icon, badge, current }) => (
-              <li key={href} className="shrink-0">
+              <li key={href}>
                 <Link
                   href={href}
                   aria-current={current ? 'page' : undefined}
@@ -60,7 +60,7 @@ export default async function AccountPage() {
                 </Link>
               </li>
             ))}
-            <li className="shrink-0 lg:mt-2 lg:border-t lg:border-line lg:pt-2">
+            <li className="mt-2 border-t border-line pt-2">
               <SignOutButton>
                 <span className="flex items-center gap-2.5 rounded-md px-3 py-2.5 text-sm text-muted transition-colors hover:bg-surface hover:text-danger">
                   <LogOut className="h-4 w-4" aria-hidden />
