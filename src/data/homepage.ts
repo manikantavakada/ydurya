@@ -71,6 +71,9 @@ export const DEFAULT_HOMEPAGE_SECTIONS: HomepageSectionSeed[] = [
     overlayStrength: 40,
     // The only band above the fold, so the only one loaded eagerly.
     priority: true,
+    // No real hero photograph exists yet — `import:home-art` switches this on
+    // automatically the moment `hero_desk`/`hero_mob` land in assets/.
+    isActive: false,
   },
   {
     key: 'fresh-arrivals',
@@ -82,9 +85,9 @@ export const DEFAULT_HOMEPAGE_SECTIONS: HomepageSectionSeed[] = [
     imageAlt: 'New season YDURYA styles',
     focalMobile: '50% 35%',
     textAlign: 'BOTTOM_LEFT',
-    // A rail here lets people buy without leaving the campaign flow.
-    showProductRail: true,
-    railSource: 'new',
+    // The band itself is the campaign moment; a product grid directly under
+    // it duplicates the shop page one click away without adding anything.
+    showProductRail: false,
   },
   {
     key: 'shirts',
@@ -95,6 +98,9 @@ export const DEFAULT_HOMEPAGE_SECTIONS: HomepageSectionSeed[] = [
     ...art('shirts'),
     imageAlt: 'YDURYA shirts',
     textAlign: 'CENTER',
+    // No editorial photograph for this band yet — shirts already sell fine
+    // through the header nav and the Fresh Arrivals rail.
+    isActive: false,
   },
   {
     key: 'polos',
@@ -104,8 +110,9 @@ export const DEFAULT_HOMEPAGE_SECTIONS: HomepageSectionSeed[] = [
     ...art('polos'),
     imageAlt: 'YDURYA polo shirts',
     textAlign: 'BOTTOM_CENTER',
-    // Enabled by the admin once the category has stock.
-    isActive: false,
+    // Real campaign photography exists, but no stock yet — shown as a
+    // preview rather than hidden entirely.
+    comingSoon: true,
   },
   {
     key: 't-shirts',
@@ -148,6 +155,8 @@ export const DEFAULT_HOMEPAGE_SECTIONS: HomepageSectionSeed[] = [
     textAlign: 'BOTTOM_CENTER',
     showProductRail: true,
     railSource: 'bestseller',
+    // No editorial photograph for this band yet.
+    isActive: false,
   },
   {
     key: 'sale',
@@ -159,6 +168,8 @@ export const DEFAULT_HOMEPAGE_SECTIONS: HomepageSectionSeed[] = [
     imageAlt: 'YDURYA sale',
     textAlign: 'BOTTOM_LEFT',
     overlayStrength: 45,
+    // No editorial photograph for this band yet.
+    isActive: false,
   },
 ];
 

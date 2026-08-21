@@ -79,6 +79,12 @@ const TITLES: Record<string, { title: string; href: string }> = {
 
 const MAX_WIDTH = { desktop: 2400, mobile: 1200 } as const;
 
+/**
+ * Real campaign photography exists for these, but the category has no stock
+ * yet — shown as a "Coming Soon" preview rather than a live link.
+ */
+const COMING_SOON = new Set(['polos', 'jackets', 'hoodies']);
+
 type Variant = 'desktop' | 'mobile';
 
 function parseName(file: string): { key: string; variant: Variant } | null {
@@ -185,6 +191,7 @@ async function main() {
       focalMobile: 'left center',
       theme: 'DARK' as const,
       isActive: true,
+      comingSoon: COMING_SOON.has(key),
     };
 
     if (existing) {
