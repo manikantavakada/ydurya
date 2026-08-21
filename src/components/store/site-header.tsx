@@ -147,8 +147,7 @@ export function SiteHeader({
             href="/"
             aria-label={`${BRAND.name} home`}
             className={cn(
-              'font-display font-bold tracking-luxe transition-all duration-300 lg:absolute lg:left-1/2 lg:-translate-x-1/2',
-              scrolled ? 'text-lg lg:text-xl' : 'text-lg lg:text-2xl',
+              'transition-all duration-300 lg:absolute lg:left-1/2 lg:-translate-x-1/2',
               // YDURYA's campaign artwork already carries the wordmark, so the
               // header's copy would sit directly beneath a second one. It fades
               // out only while transparent over that artwork and returns the
@@ -156,7 +155,14 @@ export function SiteHeader({
               overlay && 'pointer-events-none opacity-0',
             )}
           >
-            {BRAND.name}
+            <span className="font-display text-lg font-bold tracking-luxe lg:hidden">{BRAND.name}</span>
+            <Image
+              src="/images/brand/logo.webp"
+              alt={BRAND.name}
+              width={900}
+              height={300}
+              className={cn('hidden w-auto transition-all duration-300 lg:block', scrolled ? 'h-7' : 'h-8')}
+            />
           </Link>
 
           {/* ── Actions ──────────────────────────────────────────────── */}

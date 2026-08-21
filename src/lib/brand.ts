@@ -14,7 +14,11 @@ export const BRAND = {
   established: '2025',
   city: 'Visakhapatnam',
   country: 'India',
-  instagram: 'https://www.instagram.com/ydurya',
+  instagram: 'https://www.instagram.com/ydurya_?igsi=d2FldGg5bWVoaHIy',
+  email: 'lankaravanaaa1234@gmail.com',
+  /** Digits only, no leading +, for wa.me links. */
+  whatsappNumber: '916309636534',
+  phoneDisplay: '+91 63096 36534',
   /** Marquee words shown between the header and the hero on the live site. */
   marquee: ['Comfort', 'Confidence', 'Classy', 'Dress with intention', 'Be Royal · Be Loyal'],
   announcements: [

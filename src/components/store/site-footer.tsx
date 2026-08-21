@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Instagram } from 'lucide-react';
+import { Instagram, Mail, MessageCircle, Phone } from 'lucide-react';
 import { BRAND, FOOTER_LINKS } from '@/lib/brand';
 import { NewsletterForm } from './newsletter-form';
 
@@ -16,16 +16,36 @@ export function SiteFooter() {
               Est. {BRAND.established} · {BRAND.city}, {BRAND.country}
             </p>
 
-            <a
-              href={BRAND.instagram}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-5 inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-ink"
-            >
-              <Instagram className="h-4 w-4" aria-hidden />
-              Instagram
-              <span className="sr-only">(opens in a new tab)</span>
-            </a>
+            <div className="mt-5 space-y-2.5">
+              <a
+                href={BRAND.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm text-muted transition-colors hover:text-ink"
+              >
+                <Instagram className="h-4 w-4" aria-hidden />
+                Instagram
+                <span className="sr-only">(opens in a new tab)</span>
+              </a>
+              <a
+                href={`https://wa.me/${BRAND.whatsappNumber}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm text-muted transition-colors hover:text-ink"
+              >
+                <MessageCircle className="h-4 w-4" aria-hidden />
+                WhatsApp
+                <span className="sr-only">(opens in a new tab)</span>
+              </a>
+              <a href={`tel:+${BRAND.whatsappNumber}`} className="flex items-center gap-2 text-sm text-muted transition-colors hover:text-ink">
+                <Phone className="h-4 w-4" aria-hidden />
+                {BRAND.phoneDisplay}
+              </a>
+              <a href={`mailto:${BRAND.email}`} className="flex items-center gap-2 text-sm text-muted transition-colors hover:text-ink">
+                <Mail className="h-4 w-4" aria-hidden />
+                {BRAND.email}
+              </a>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:col-span-5">
