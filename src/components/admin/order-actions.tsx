@@ -28,20 +28,45 @@ export function OrderActions({
   currentStatus,
   refundablePaise,
   canRefund,
+  canRecheckPayment,
 }: {
   orderId: string;
   currentStatus: OrderStatus;
   refundablePaise: number;
   canRefund: boolean;
+  /** Prepaid order whose payment has not settled — worth re-verifying with the gateway. */
+  canRecheckPayment: boolean;
 }) {
   const router = useRouter();
   const { toast } = useToast();
   const [status, setStatus] = React.useState<OrderStatus>(currentStatus);
   const [message, setMessage] = React.useState('');
   const [saving, setSaving] = React.useState(false);
+  const [rechecking, setRechecking] = React.useState(false);
   const [refundOpen, setRefundOpen] = React.useState(false);
   const [refundAmount, setRefundAmount] = React.useState(String(refundablePaise / 100));
   const [refundReason, setRefundReason] = React.useState('');
+
+  const recheckPayment = async () => {
+    setRechecking(true);
+    try {
+      const res = await fetch(`/api/admin/orders/${orderId}/recheck-payment`, { method: 'POST' });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.error?.message ?? 'Could not recheck payment.');
+
+      toast({
+        title: json.settled
+          ? 'Payment confirmed — order updated'
+          : `Gateway reports: ${String(json.status).toLowerCase()}`,
+        variant: json.settled ? 'success' : 'info',
+      });
+      router.refresh();
+    } catch (err) {
+      toast({ title: err instanceof Error ? err.message : 'Recheck failed.', variant: 'error' });
+    } finally {
+      setRechecking(false);
+    }
+  };
 
   const save = async () => {
     setSaving(true);
@@ -102,7 +127,20 @@ export function OrderActions({
               Refund ({formatPaise(refundablePaise)})
             </Button>
           )}
+
+          {canRecheckPayment && (
+            <Button variant="outline" onClick={recheckPayment} loading={rechecking}>
+              Recheck payment
+            </Button>
+          )}
         </div>
+
+        {canRecheckPayment && (
+          <p className="text-xs text-muted">
+            Re-verifies with the payment gateway directly — use this if a customer paid but the
+            order is still showing pending, e.g. because they closed the tab before it confirmed.
+          </p>
+        )}
 
         {status === 'CANCELLED' && currentStatus !== 'CANCELLED' && (
           <p className="rounded-md bg-gold/10 p-3 text-xs text-gold-ink">

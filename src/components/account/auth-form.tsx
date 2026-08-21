@@ -121,7 +121,7 @@ export function AuthForm({ mode, next }: { mode: Mode; next?: string }) {
         </Field>
 
         {!isLogin && (
-          <Field label="Mobile number (optional)" htmlFor="phone" error={form.formState.errors.phone?.message}>
+          <Field label="Mobile number" htmlFor="phone" required error={form.formState.errors.phone?.message}>
             <Input type="tel" inputMode="numeric" autoComplete="tel" {...form.register('phone')} />
           </Field>
         )}

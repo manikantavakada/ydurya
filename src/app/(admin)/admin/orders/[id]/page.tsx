@@ -145,6 +145,12 @@ export default async function AdminOrderPage({ params }: { params: Promise<{ id:
             currentStatus={order.status}
             refundablePaise={refundable}
             canRefund={Boolean(user && can(user.role, 'orders.refund') && isSettled)}
+            // Only useful while the order is still PENDING — that's the exact
+            // state markPaid requires to confirm it, and the state a payment
+            // left unverified (e.g. the customer closed the tab) is stuck in.
+            canRecheckPayment={Boolean(
+              user && can(user.role, 'orders.write') && order.paymentMethod === 'PREPAID' && order.status === 'PENDING',
+            )}
           />
 
           <section className="rounded-lg border border-line p-5">

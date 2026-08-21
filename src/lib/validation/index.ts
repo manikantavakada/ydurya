@@ -43,7 +43,10 @@ export const registerSchema = z.object({
   password: passwordSchema,
   firstName: z.string().trim().max(100).optional(),
   lastName: z.string().trim().max(100).optional(),
-  phone: phoneSchema.optional(),
+  // Required at signup: order tracking, delivery updates and Cashfree's own
+  // OCC phone-login all key off this number, so an account without one is
+  // missing the one piece of contact info the rest of checkout depends on.
+  phone: phoneSchema,
 });
 
 export const loginSchema = z.object({

@@ -9,7 +9,7 @@ import type { AddressSnapshot } from '@/types';
 const RESET_TTL_MINUTES = 30;
 
 export const CustomerService = {
-  async register(input: { email: string; password: string; firstName?: string; lastName?: string; phone?: string }) {
+  async register(input: { email: string; password: string; firstName?: string; lastName?: string; phone: string }) {
     const email = input.email.trim().toLowerCase();
     const existing = await prisma.user.findUnique({ where: { email }, select: { id: true } });
     if (existing) throw conflict('An account with this email already exists.');
