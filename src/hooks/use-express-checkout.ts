@@ -67,10 +67,17 @@ export function useExpressCheckout() {
 
         if (json.paymentSessionId) {
           const result = await openCashfreeCheckout(json.paymentSessionId as string);
-          // Cashfree owns the page from here; it returns the customer to the
-          // confirmation route, which verifies server-side before showing
-          // anything as paid.
-          if (result.opened) return;
+          // The sheet opens as an in-page modal (`redirectTarget: '_modal'`),
+          // not a full-page redirect, so Cashfree never navigates anywhere on
+          // its own — closing the modal (paid, cancelled, or failed) just
+          // resolves this promise on the page the customer already had open.
+          // Sending them to the confirmation route ourselves is what actually
+          // shows a result; it re-verifies with the gateway server-side
+          // before ever describing the order as paid.
+          if (result.opened) {
+            router.push(`/checkout/confirmation/${order.orderNumber}`);
+            return;
+          }
           console.warn('[express] Cashfree sheet unavailable:', result.reason);
         }
 
