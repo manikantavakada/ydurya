@@ -204,6 +204,11 @@ export const OrderService = {
             couponCode: priced.coupon?.code ?? null,
             customerNote: input.customerNote?.slice(0, 1000) ?? null,
             idempotencyKey: input.idempotencyKey,
+            // Recorded so a later payment success (webhook or return-URL
+            // verify, neither of which has the customer's session) knows
+            // exactly which cart to empty. Null for "Buy now", which never
+            // touches the bag.
+            sourceCartId: cart?.id ?? null,
             items: {
               create: resolved.map(({ item, variant }, i) => {
                 const unit = priceable[i].unitPricePaise;
@@ -264,12 +269,15 @@ export const OrderService = {
           await tx.orderEvent.create({
             data: { orderId: created.id, status: OrderStatus.CONFIRMED, message: 'Cash on delivery order confirmed.', source: 'checkout' },
           });
-        }
 
-        // Buy-now never touches the bag — whatever was in it is still there.
-        if (cart) {
-          await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
-          await tx.cart.update({ where: { id: cart.id }, data: { couponId: null } });
+          // COD has no payment step to wait for, so the order is already
+          // confirmed above — the bag can empty right away. A prepaid order
+          // leaves the bag untouched until `markPaid` actually settles it, so
+          // a failed or abandoned payment doesn't lose the customer's items.
+          if (cart) {
+            await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
+            await tx.cart.update({ where: { id: cart.id }, data: { couponId: null } });
+          }
         }
 
         return created;
@@ -310,6 +318,13 @@ export const OrderService = {
       await tx.orderEvent.create({
         data: { orderId: order.id, status: OrderStatus.CONFIRMED, message: 'Payment received.', source },
       });
+
+      // The bag was deliberately left alone at checkout for a prepaid order —
+      // now that payment has actually settled, empty the cart it came from.
+      if (order.sourceCartId) {
+        await tx.cartItem.deleteMany({ where: { cartId: order.sourceCartId } });
+        await tx.cart.update({ where: { id: order.sourceCartId }, data: { couponId: null } }).catch(() => undefined);
+      }
     });
   },
 

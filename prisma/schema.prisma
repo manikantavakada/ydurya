@@ -463,6 +463,12 @@ model Order {
   status        OrderStatus   @default(PENDING)
   paymentMethod PaymentMethod @default(PREPAID)
 
+  /// The cart this order was built from, if any — null for a "Buy now"
+  /// purchase, which never touches the bag. No FK: carts are pruned by
+  /// expiry independently of the orders built from them, and this is only
+  /// ever read back to find the right cart to empty once payment settles.
+  sourceCartId String? @db.VarChar(191)
+
   // All monetary fields are server-computed. Frontend values are never trusted.
   subtotal      Decimal @db.Decimal(10, 2)
   discountTotal Decimal @default(0) @db.Decimal(10, 2)
