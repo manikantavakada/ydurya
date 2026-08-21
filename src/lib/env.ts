@@ -56,6 +56,18 @@ const serverSchema = z.object({
 
   UPLOAD_DIR: z.string().default('./public/uploads'),
   MAX_UPLOAD_MB: z.coerce.number().int().positive().default(8),
+
+  /**
+   * Shared secret for /api/cron/expire-orders. A prepaid order a customer
+   * abandons mid-checkout (closes the tab, never completes payment) has no
+   * webhook and no browser return to tell us it failed — Cashfree just
+   * leaves it ACTIVE until it expires on its own. This route re-verifies
+   * every order past that expiry so the existing failure path (cancel +
+   * release stock) actually runs instead of holding the reservation
+   * forever. Empty disables the route entirely rather than leaving it
+   * reachable with no auth.
+   */
+  CRON_SECRET: z.string().optional().default(''),
 });
 
 const publicSchema = z.object({

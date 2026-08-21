@@ -161,6 +161,11 @@ export class CashfreeProvider implements PaymentProvider {
         order_id: input.orderNumber,
         order_amount: Number((input.amountPaise / 100).toFixed(2)),
         order_currency: input.currency,
+        // Bounds how long a checkout a customer never finishes (closed tab,
+        // abandoned payment) stays ACTIVE. Without this Cashfree leaves it
+        // open indefinitely, so /api/cron/expire-orders would have nothing
+        // to detect and the stock it reserved would never be released.
+        order_expiry_time: new Date(Date.now() + 20 * 60 * 1000).toISOString(),
         customer_details: {
           // Cashfree requires a stable customer_id; the order id is unique
           // and good enough here since we do not maintain a Cashfree
