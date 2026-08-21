@@ -18,7 +18,6 @@ export function ListingPage({
   eyebrow,
   description,
   listing,
-  isSignedIn,
   breadcrumbs,
   listName,
   showCategoryFilter = true,
@@ -27,7 +26,6 @@ export function ListingPage({
   eyebrow?: string;
   description?: string;
   listing: ProductListResult;
-  isSignedIn: boolean;
   breadcrumbs: { name: string; href: string }[];
   listName: string;
   showCategoryFilter?: boolean;
@@ -77,7 +75,7 @@ export function ListingPage({
           <div className="mb-5 lg:hidden">
             <ActiveFilterChips facets={listing.facets} />
           </div>
-          <ProductListing initialData={listing} isSignedIn={isSignedIn} listName={listName} />
+          <ProductListing initialData={listing} listName={listName} />
         </div>
       </div>
     </div>

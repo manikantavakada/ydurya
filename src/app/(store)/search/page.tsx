@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { ProductService } from '@/services/product.service';
 import { SearchService } from '@/services/search.service';
-import { getCurrentUser } from '@/lib/auth/session';
 import { productQuerySchema } from '@/lib/validation';
 import { ListingPage } from '@/components/shop/listing-page';
 import { NoResultsState } from '@/components/ui/states';
@@ -39,23 +38,20 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
     );
   }
 
-  const [listing, user] = await Promise.all([
-    ProductService.list({
-      search: term,
-      sizeCodes: q.size?.split(',').filter(Boolean),
-      colorSlugs: q.color?.split(',').filter(Boolean),
-      collection: q.collection,
+  const listing = await ProductService.list({
+    search: term,
+    sizeCodes: q.size?.split(',').filter(Boolean),
+    colorSlugs: q.color?.split(',').filter(Boolean),
+    collection: q.collection,
     categorySlugs: q.category?.split(',').filter(Boolean),
-      minPricePaise: q.minPrice != null ? q.minPrice * 100 : undefined,
-      maxPricePaise: q.maxPrice != null ? q.maxPrice * 100 : undefined,
-      inStockOnly: Boolean(q.inStock),
-      onSaleOnly: Boolean(q.onSale),
-      sort: q.sort,
-      page: 1,
-      perPage: q.perPage,
-    }),
-    getCurrentUser(),
-  ]);
+    minPricePaise: q.minPrice != null ? q.minPrice * 100 : undefined,
+    maxPricePaise: q.maxPrice != null ? q.maxPrice * 100 : undefined,
+    inStockOnly: Boolean(q.inStock),
+    onSaleOnly: Boolean(q.onSale),
+    sort: q.sort,
+    page: 1,
+    perPage: q.perPage,
+  });
 
   void SearchService.log(term, listing.total);
 
@@ -65,7 +61,6 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
       eyebrow="Search results"
       description={`${listing.total} ${listing.total === 1 ? 'result' : 'results'}`}
       listing={listing}
-      isSignedIn={Boolean(user)}
       breadcrumbs={[{ name: 'Home', href: '/' }, { name: 'Search', href: '/search' }]}
       listName={`Search: ${term}`}
     />

@@ -122,11 +122,7 @@ export default async function ProductPage({ params }: { params: Params }) {
       </Suspense>
 
       {related.length > 0 && (
-        <ProductRail
-          title="You may also like"
-          products={related}
-          isSignedIn={Boolean(user)}
-        />
+        <ProductRail title="You may also like" products={related} />
       )}
 
       <ProductJsonLd product={product} />

@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { CategoryService } from '@/services/category.service';
 import { ProductService } from '@/services/product.service';
-import { getCurrentUser } from '@/lib/auth/session';
 import { productQuerySchema } from '@/lib/validation';
 import { ListingPage } from '@/components/shop/listing-page';
 import { BreadcrumbJsonLd } from '@/components/seo/json-ld';
@@ -57,22 +56,19 @@ export default async function CategoryPage({
   const parsed = productQuerySchema.safeParse(flat);
   const q = parsed.success ? parsed.data : productQuerySchema.parse({});
 
-  const [listing, user] = await Promise.all([
-    ProductService.list({
-      // The category is fixed by the route; the query string can only narrow it.
-      categorySlugs: [slug],
-      sizeCodes: q.size?.split(',').filter(Boolean),
-      colorSlugs: q.color?.split(',').filter(Boolean),
-      minPricePaise: q.minPrice != null ? q.minPrice * 100 : undefined,
-      maxPricePaise: q.maxPrice != null ? q.maxPrice * 100 : undefined,
-      inStockOnly: Boolean(q.inStock),
-      onSaleOnly: Boolean(q.onSale),
-      sort: q.sort,
-      page: 1,
-      perPage: q.perPage,
-    }),
-    getCurrentUser(),
-  ]);
+  const listing = await ProductService.list({
+    // The category is fixed by the route; the query string can only narrow it.
+    categorySlugs: [slug],
+    sizeCodes: q.size?.split(',').filter(Boolean),
+    colorSlugs: q.color?.split(',').filter(Boolean),
+    minPricePaise: q.minPrice != null ? q.minPrice * 100 : undefined,
+    maxPricePaise: q.maxPrice != null ? q.maxPrice * 100 : undefined,
+    inStockOnly: Boolean(q.inStock),
+    onSaleOnly: Boolean(q.onSale),
+    sort: q.sort,
+    page: 1,
+    perPage: q.perPage,
+  });
 
   const breadcrumbs = [
     { name: 'Home', href: '/' },
@@ -88,7 +84,6 @@ export default async function CategoryPage({
           category.description ?? `${listing.total} ${listing.total === 1 ? 'style' : 'styles'}`
         }
         listing={listing}
-        isSignedIn={Boolean(user)}
         breadcrumbs={breadcrumbs}
         listName={`Category: ${category.name}`}
         showCategoryFilter={false}

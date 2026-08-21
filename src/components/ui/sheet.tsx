@@ -71,7 +71,10 @@ export const SheetContent = React.forwardRef<
         </div>
       )}
 
-      <div className="flex items-center justify-between gap-4 px-5 pb-4 pt-4">
+      {/* Visually hidden title still needs the row for the close button, but
+          nothing else is holding space there — a smaller title means less
+          empty air above whatever the panel puts first. */}
+      <div className={cn('flex items-center justify-between gap-4 px-5', hideTitle ? 'pb-1 pt-2' : 'pb-4 pt-4')}>
         <div className="min-w-0">
           <DialogPrimitive.Title className={cn('font-serif text-lg', hideTitle && 'sr-only')}>
             {title}

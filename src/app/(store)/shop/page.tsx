@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { ProductService } from '@/services/product.service';
-import { getCurrentUser } from '@/lib/auth/session';
 import { productQuerySchema } from '@/lib/validation';
 import { ProductGridSkeleton } from '@/components/ui/skeleton';
 import { ListingPage } from '@/components/shop/listing-page';
@@ -43,23 +42,20 @@ async function ShopContent({ raw }: { raw: Record<string, string | string[] | un
   const parsed = productQuerySchema.safeParse(flat);
   const q = parsed.success ? parsed.data : productQuerySchema.parse({});
 
-  const [listing, user] = await Promise.all([
-    ProductService.list({
-      collection: q.collection,
+  const listing = await ProductService.list({
+    collection: q.collection,
     categorySlugs: q.category?.split(',').filter(Boolean),
-      sizeCodes: q.size?.split(',').filter(Boolean),
-      colorSlugs: q.color?.split(',').filter(Boolean),
-      minPricePaise: q.minPrice != null ? q.minPrice * 100 : undefined,
-      maxPricePaise: q.maxPrice != null ? q.maxPrice * 100 : undefined,
-      inStockOnly: Boolean(q.inStock),
-      onSaleOnly: Boolean(q.onSale),
-      search: q.q,
-      sort: q.sort,
-      page: 1,
-      perPage: q.perPage,
-    }),
-    getCurrentUser(),
-  ]);
+    sizeCodes: q.size?.split(',').filter(Boolean),
+    colorSlugs: q.color?.split(',').filter(Boolean),
+    minPricePaise: q.minPrice != null ? q.minPrice * 100 : undefined,
+    maxPricePaise: q.maxPrice != null ? q.maxPrice * 100 : undefined,
+    inStockOnly: Boolean(q.inStock),
+    onSaleOnly: Boolean(q.onSale),
+    search: q.q,
+    sort: q.sort,
+    page: 1,
+    perPage: q.perPage,
+  });
 
   const heading = COLLECTION_HEADINGS[q.collection ?? ''] ?? {
     title: 'Shop all',
@@ -72,7 +68,6 @@ async function ShopContent({ raw }: { raw: Record<string, string | string[] | un
       eyebrow={heading.eyebrow}
       description={`${listing.total} ${listing.total === 1 ? 'style' : 'styles'}`}
       listing={listing}
-      isSignedIn={Boolean(user)}
       breadcrumbs={[
         { name: 'Home', href: '/' },
         { name: 'Shop', href: '/shop' },

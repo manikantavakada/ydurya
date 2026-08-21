@@ -21,11 +21,9 @@ import type { ProductListResult } from '@/types';
  */
 export function ProductListing({
   initialData,
-  isSignedIn,
   listName,
 }: {
   initialData: ProductListResult;
-  isSignedIn: boolean;
   listName: string;
 }) {
   const searchParams = useSearchParams();
@@ -86,7 +84,7 @@ export function ProductListing({
 
   return (
     <div>
-      <ProductGrid products={products} isSignedIn={isSignedIn} />
+      <ProductGrid products={products} />
 
       <div ref={sentinelRef} aria-hidden className="h-px" />
 

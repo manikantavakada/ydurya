@@ -5,7 +5,6 @@ import { BrandStory } from '@/components/store/brand-story';
 import { WebsiteJsonLd } from '@/components/seo/json-ld';
 import { HomepageService } from '@/services/homepage.service';
 import { ProductService } from '@/services/product.service';
-import { getCurrentUser } from '@/lib/auth/session';
 import { BRAND } from '@/lib/brand';
 import type { ProductCardDTO } from '@/types';
 
@@ -46,8 +45,7 @@ async function railProducts(source: string): Promise<{ products: ProductCardDTO[
 }
 
 export default async function HomePage() {
-  const [sections, user] = await Promise.all([HomepageService.getSections(), getCurrentUser()]);
-  const isSignedIn = Boolean(user);
+  const sections = await HomepageService.getSections();
 
   // Resolve every rail up front so the page renders in one pass.
   const rails = new Map<string, { products: ProductCardDTO[]; href: string }>();
@@ -72,12 +70,7 @@ export default async function HomePage() {
             <EditorialSection section={section} index={index} />
 
             {rail && rail.products.length > 0 && (
-              <SectionProductRail
-                title={section.title}
-                products={rail.products}
-                href={rail.href}
-                isSignedIn={isSignedIn}
-              />
+              <SectionProductRail title={section.title} products={rail.products} href={rail.href} />
             )}
           </div>
         );

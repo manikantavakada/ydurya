@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Heart, Menu, Search, ShoppingBag, User } from 'lucide-react';
@@ -96,6 +97,15 @@ export function SiteHeader({
           >
             <Menu className="h-[22px] w-[22px]" aria-hidden />
           </button>
+
+          {/* The full wordmark below already covers "home" as a link and
+              fades in only once scrolled, since the campaign artwork carries
+              its own wordmark at the top of the homepage. This mark stays
+              visible throughout so the brand is never entirely absent from
+              the bar next to the menu button. */}
+          <Link href="/" aria-hidden tabIndex={-1} className="lg:hidden">
+            <Image src="/images/brand/logo-y.webp" alt="" width={300} height={292} className="h-7 w-auto" />
+          </Link>
 
           {/* ── Desktop: primary nav ─────────────────────────────────── */}
           <nav className="hidden min-w-0 flex-1 lg:block" aria-label="Primary">

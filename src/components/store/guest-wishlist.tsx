@@ -56,7 +56,7 @@ export function GuestWishlist() {
         </Link>{' '}
         to keep it across devices.
       </p>
-      <ProductGrid products={data.products} isSignedIn={false} />
+      <ProductGrid products={data.products} />
     </>
   );
 }

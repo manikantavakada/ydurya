@@ -20,14 +20,16 @@ export function MobileMenu({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="left" title="Menu" hideTitle className="max-w-[86vw] sm:max-w-sm">
         <Image
-          src="/images/brand/logo.webp"
-          alt={BRAND.name}
-          width={900}
-          height={300}
+          src="/images/brand/logo-y.webp"
+          alt=""
+          aria-hidden
+          width={300}
+          height={292}
           priority
           className="h-9 w-auto"
         />
-        <p className="mt-1.5 text-2xs uppercase tracking-luxe text-muted">{BRAND.tagline}</p>
+        <p className="mt-2 font-display text-xl font-bold tracking-luxe">{BRAND.name}</p>
+        <p className="mt-1 text-2xs uppercase tracking-luxe text-muted">{BRAND.tagline}</p>
 
         <nav className="mt-7" aria-label="Mobile">
           <ul className="space-y-0.5">

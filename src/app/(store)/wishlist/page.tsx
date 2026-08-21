@@ -42,7 +42,7 @@ export default async function WishlistPage() {
           actionHref="/shop"
         />
       ) : (
-        <ProductGrid products={products} isSignedIn />
+        <ProductGrid products={products} />
       )}
     </div>
   );

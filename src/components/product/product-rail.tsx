@@ -4,8 +4,6 @@ import * as React from 'react';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { ProductCard } from './product-card';
-import { useWishlist } from '@/hooks/use-wishlist';
-import { rupees } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
 import type { ProductCardDTO } from '@/types';
 
@@ -22,20 +20,17 @@ export function ProductRail({
   products,
   viewAllHref,
   viewAllLabel = 'View all',
-  isSignedIn = false,
   eyebrow,
 }: {
   title: string;
   products: ProductCardDTO[];
   viewAllHref?: string;
   viewAllLabel?: string;
-  isSignedIn?: boolean;
   eyebrow?: string;
 }) {
   const railRef = React.useRef<HTMLDivElement>(null);
   const [atStart, setAtStart] = React.useState(true);
   const [atEnd, setAtEnd] = React.useState(false);
-  const wishlist = useWishlist({ isSignedIn });
 
   const sync = React.useCallback(() => {
     const el = railRef.current;
@@ -141,13 +136,6 @@ export function ProductRail({
               product={product}
               priority={i < 2}
               sizes="(min-width:1280px) 19vw, (min-width:768px) 30vw, 46vw"
-              isWishlisted={wishlist.has(product.id)}
-              onToggleWishlist={(p) =>
-                wishlist.toggle.mutate({
-                  productId: p.id,
-                  meta: { id: p.id, name: p.name, price: rupees(p.pricePaise) },
-                })
-              }
             />
           </div>
         ))}

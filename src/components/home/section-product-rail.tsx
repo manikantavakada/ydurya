@@ -13,24 +13,16 @@ export function SectionProductRail({
   title,
   products,
   href,
-  isSignedIn,
 }: {
   title: string;
   products: ProductCardDTO[];
   href: string;
-  isSignedIn: boolean;
 }) {
   if (products.length === 0) return null;
 
   return (
     <div className="border-b border-line-soft bg-bg">
-      <ProductRail
-        title={title}
-        products={products}
-        viewAllHref={href}
-        viewAllLabel="View all"
-        isSignedIn={isSignedIn}
-      />
+      <ProductRail title={title} products={products} viewAllHref={href} viewAllLabel="View all" />
     </div>
   );
 }
