@@ -31,8 +31,8 @@ export function ListingPage({
   showCategoryFilter?: boolean;
 }) {
   return (
-    <div className="container py-6 lg:py-10">
-      <nav aria-label="Breadcrumb" className="mb-5">
+    <div className="container py-4 lg:py-6">
+      <nav aria-label="Breadcrumb" className="mb-3">
         <ol className="flex flex-wrap items-center gap-1 text-2xs uppercase tracking-wide2 text-muted">
           {breadcrumbs.map((crumb, i) => (
             <li key={crumb.href} className="flex items-center gap-1">
@@ -47,12 +47,12 @@ export function ListingPage({
         </ol>
       </nav>
 
-      <header className="mb-6">
-        {eyebrow && <p className="eyebrow mb-2">{eyebrow}</p>}
+      <header className="mb-4">
+        {eyebrow && <p className="eyebrow mb-1.5">{eyebrow}</p>}
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="text-3xl md:text-4xl">{title}</h1>
-            {description && <p className="mt-1.5 text-sm text-muted">{description}</p>}
+            {description && <p className="mt-1 text-sm text-muted">{description}</p>}
           </div>
           <SortSelect />
         </div>

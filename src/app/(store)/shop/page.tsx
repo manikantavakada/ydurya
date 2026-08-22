@@ -59,7 +59,10 @@ async function ShopContent({ raw }: { raw: Record<string, string | string[] | un
 
   const heading = COLLECTION_HEADINGS[q.collection ?? ''] ?? {
     title: 'Shop all',
-    eyebrow: BRAND.tagline,
+    // No eyebrow here — the brand tagline already runs through the header
+    // and footer on every page, and repeating it above "Shop all" specifically
+    // was just extra vertical space with nothing new to say.
+    eyebrow: '',
   };
 
   return (

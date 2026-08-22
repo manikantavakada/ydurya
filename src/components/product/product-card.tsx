@@ -52,7 +52,12 @@ export function ProductCard({
 
   return (
     <article className={cn('group relative flex flex-col', className)}>
-      <div className="relative overflow-hidden rounded-lg bg-surface">
+      {/* z-10 lifts the whole image area (and its scroll strip) above the
+          title link's full-card `::after` overlay below — without it, that
+          overlay paints on top (later in DOM order) and silently swallows
+          every touch-drag before the strip ever sees it, since it has no
+          scrollable content of its own to hand the gesture off to. */}
+      <div className="relative z-10 overflow-hidden rounded-lg bg-surface">
         <Link href={href} className="block" tabIndex={-1} aria-hidden>
           {strip.length > 0 ? (
             <div
@@ -88,7 +93,9 @@ export function ProductCard({
 
         {strip.length > 1 && (
           <>
-            <div className="pointer-events-none absolute inset-x-0 top-2 flex justify-center gap-1">
+            {/* Desktop only — a swipe on mobile is discoverable enough on
+                its own without an extra dot row taking up card space. */}
+            <div className="pointer-events-none absolute inset-x-0 top-2 hidden justify-center gap-1 lg:flex">
               {strip.map((image, i) => (
                 <span
                   key={image.id}

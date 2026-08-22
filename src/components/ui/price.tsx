@@ -29,20 +29,19 @@ export function Price({
 
   return (
     <p className={cn('flex flex-wrap items-baseline gap-x-2 gap-y-0.5', className)}>
+      {onSale && (
+        <span className={cn(sizes.was, 'text-faint line-through')}>
+          {formatPaise(compareAtPaise!)}
+          <span className="sr-only"> original price</span>
+        </span>
+      )}
+
       <span className={cn(sizes.now, 'text-ink')}>{formatPaise(pricePaise)}</span>
 
-      {onSale && (
-        <>
-          <span className={cn(sizes.was, 'text-faint line-through')}>
-            {formatPaise(compareAtPaise!)}
-            <span className="sr-only"> original price</span>
-          </span>
-          {showDiscount && percent !== null && percent > 0 && (
-            <span className={cn(sizes.off, 'font-sans font-semibold uppercase tracking-wide2 text-gold-ink')}>
-              {percent}% off
-            </span>
-          )}
-        </>
+      {onSale && showDiscount && percent !== null && percent > 0 && (
+        <span className={cn(sizes.off, 'font-sans font-semibold uppercase tracking-wide2 text-success')}>
+          {percent}% off
+        </span>
       )}
     </p>
   );
