@@ -106,7 +106,14 @@ function parseSpreadsheet(buffer: Buffer, isExcel: boolean): CsvRow[] {
 }
 
 export const BulkImportService = {
-  async importProducts(fileBuffer: Buffer, isExcel: boolean, zipBuffer: Buffer | null): Promise<BulkImportSummary> {
+  /**
+   * `dryRun` validates every row — names, prices, variants, categories,
+   * image filenames — exactly as a real import would, but skips the actual
+   * `prisma.$transaction` writes and image storage. Used by the AI Copilot
+   * to show "this will create N products, M will fail" before the admin
+   * confirms, without touching the database.
+   */
+  async importProducts(fileBuffer: Buffer, isExcel: boolean, zipBuffer: Buffer | null, dryRun = false): Promise<BulkImportSummary> {
     const rows: CsvRow[] = parseSpreadsheet(fileBuffer, isExcel);
 
     const [sizes, colors, categories] = await Promise.all([
@@ -179,6 +186,11 @@ export const BulkImportService = {
           .filter(Boolean);
         for (const fname of imageNames) {
           if (!zipFiles.has(fname)) throw new Error(`Image "${fname}" not found in the uploaded ZIP.`);
+        }
+
+        if (dryRun) {
+          results.push({ row: rowNumber, name, status: 'created' });
+          continue;
         }
 
         const product = await prisma.$transaction(async (tx) => {

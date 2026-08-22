@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Banknote, BarChart3, Boxes, Image as ImageIcon, LayoutDashboard, LayoutTemplate,
-  LogOut, Menu, Package, Settings, ShoppingCart, Star, Tags, Users, X,
+  LogOut, Menu, Package, Settings, ShoppingCart, Sparkles, Star, Tags, Users, X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { can, type Permission } from '@/lib/auth/rbac';
@@ -30,6 +30,7 @@ const NAV: NavItem[] = [
   { href: '/admin/banners', label: 'Banners', Icon: ImageIcon, permission: 'banners.read' },
   { href: '/admin/reviews', label: 'Reviews', Icon: Star, permission: 'reviews.read' },
   { href: '/admin/settings', label: 'Settings', Icon: Settings, permission: 'settings.read' },
+  { href: '/admin/ai', label: 'AI Assistant', Icon: Sparkles, permission: 'orders.read' },
 ];
 
 /**

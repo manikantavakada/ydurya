@@ -68,6 +68,14 @@ const serverSchema = z.object({
    * reachable with no auth.
    */
   CRON_SECRET: z.string().optional().default(''),
+
+  // ── AI Admin Copilot ─────────────────────────────────────────────────────
+  // Server-only — never exposed to the browser. Empty AI_API_KEY disables
+  // the whole feature: the chat route refuses rather than calling a
+  // provider with no key configured.
+  AI_PROVIDER: z.enum(['gemini']).default('gemini'),
+  AI_API_KEY: z.string().optional().default(''),
+  AI_MODEL: z.string().default('gemini-3.6-flash'),
 });
 
 const publicSchema = z.object({
