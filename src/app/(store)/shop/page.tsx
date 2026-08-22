@@ -77,6 +77,7 @@ async function ShopContent({ raw }: { raw: Record<string, string | string[] | un
         ...(q.collection ? [{ name: heading.title, href: `/shop?collection=${q.collection}` }] : []),
       ]}
       listName={heading.title}
+      hideHeading={!q.collection}
     />
   );
 }

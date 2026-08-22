@@ -21,6 +21,14 @@ export function ListingPage({
   breadcrumbs,
   listName,
   showCategoryFilter = true,
+  /**
+   * Visually hides the heading and style count — the breadcrumb ("Shop")
+   * already says where you are on the plain "Shop all" page, so a second
+   * repeat of it right below was just extra height with nothing new to say.
+   * The h1 stays in the markup (sr-only) rather than disappearing outright,
+   * since a listing page still needs one for screen readers and SEO.
+   */
+  hideHeading = false,
 }: {
   title: string;
   eyebrow?: string;
@@ -29,6 +37,7 @@ export function ListingPage({
   breadcrumbs: { name: string; href: string }[];
   listName: string;
   showCategoryFilter?: boolean;
+  hideHeading?: boolean;
 }) {
   return (
     <div className="container py-4 lg:py-6">
@@ -47,10 +56,10 @@ export function ListingPage({
         </ol>
       </nav>
 
-      <header className="mb-4">
-        {eyebrow && <p className="eyebrow mb-1.5">{eyebrow}</p>}
+      <header className={hideHeading ? 'mb-2' : 'mb-4'}>
+        {!hideHeading && eyebrow && <p className="eyebrow mb-1.5">{eyebrow}</p>}
         <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
+          <div className={hideHeading ? 'sr-only' : undefined}>
             <h1 className="text-3xl md:text-4xl">{title}</h1>
             {description && <p className="mt-1 text-sm text-muted">{description}</p>}
           </div>
