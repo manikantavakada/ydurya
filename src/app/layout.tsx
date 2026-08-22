@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Cinzel, Cormorant_Garamond, DM_Sans } from 'next/font/google';
 import { BRAND, BRAND_COLORS } from '@/lib/brand';
 import { publicEnv } from '@/lib/env';
+import { MetaPixel } from '@/components/analytics/meta-pixel';
 import { Providers } from './providers';
 import './globals.css';
 
@@ -86,6 +87,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <body>
         <a href="#main" className="skip-link">Skip to main content</a>
+        <MetaPixel />
         <Providers>{children}</Providers>
       </body>
     </html>
