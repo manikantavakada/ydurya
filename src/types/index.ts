@@ -60,6 +60,8 @@ export interface ProductCardDTO {
   image: ProductImageDTO | null;
   /** Second image, used for the hover/tap image swap the live theme uses. */
   hoverImage: ProductImageDTO | null;
+  /** Up to 5, in display order — the card's own scrollable gallery. */
+  images: ProductImageDTO[];
   pricePaise: Paise;
   compareAtPaise: Paise | null;
   discountPercent: number | null;

@@ -30,7 +30,9 @@ const cardSelect = {
   createdAt: true,
   images: {
     orderBy: { position: 'asc' },
-    take: 2,
+    // Enough for a card's own scrollable gallery, matching the PDP, without
+    // pulling a product's entire shoot into every listing page's payload.
+    take: 5,
     select: {
       id: true, url: true, alt: true, width: true, height: true,
       blurDataUrl: true, isPlaceholder: true, colorId: true,
@@ -91,6 +93,7 @@ export function toProductCard(row: CardRow): ProductCardDTO {
     name: row.name,
     image: mapImage(row.images[0], row.name),
     hoverImage: mapImage(row.images[1], row.name),
+    images: row.images.map((i) => mapImage(i, row.name)).filter((i): i is ProductImageDTO => i !== null),
     pricePaise,
     compareAtPaise,
     discountPercent:
