@@ -35,6 +35,15 @@ export interface VerifyPaymentResult {
   providerPaymentId: string | null;
   amountPaise: number | null;
   failureReason?: string;
+  /**
+   * True when the gateway settled this as cash on delivery rather than a
+   * real prepayment. Cashfree's One Click Checkout offers COD inside its own
+   * sheet and then reports the order as `PAID` with `payment_group: "cash"` —
+   * meaning "order confirmed", NOT "money received". Treating that as a
+   * prepayment tells the admin they have been paid when the cash is still
+   * due on delivery, so it is surfaced here and handled explicitly.
+   */
+  isCashOnDelivery?: boolean;
   raw: unknown;
 }
 
@@ -47,6 +56,8 @@ export interface WebhookResult {
   status: PaymentStatus | null;
   providerPaymentId: string | null;
   amountPaise: number | null;
+  /** See `VerifyPaymentResult.isCashOnDelivery` — same meaning, from the event payload. */
+  isCashOnDelivery?: boolean;
   signatureOk: boolean;
   raw: unknown;
 }

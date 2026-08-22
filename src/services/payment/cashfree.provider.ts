@@ -90,7 +90,16 @@ interface CashfreePayment {
   cf_payment_id: number | string;
   payment_status: CashfreePaymentStatus;
   payment_amount: number;
+  /** `"cash"` for a One Click Checkout COD selection; a real instrument otherwise. */
+  payment_group?: string;
 }
+
+/** Cashfree's marker for "customer chose cash on delivery inside the sheet". */
+const COD_PAYMENT_GROUP = 'cash';
+
+/** Cashfree's own stand-in contact details on an OCC order — never the customer's. */
+const SYNTHETIC_EMAIL = /@cashfree\.com$/i;
+const SYNTHETIC_NAME = /^cashfree customer$/i;
 
 export class CashfreeProvider implements PaymentProvider {
   readonly name = 'cashfree';
@@ -259,6 +268,7 @@ export class CashfreeProvider implements PaymentProvider {
     // sub-resource, not the order itself — fetched only when settled, since
     // it is otherwise unused.
     let providerPaymentId: string | null = null;
+    let isCashOnDelivery = false;
     if (order.order_status === 'PAID') {
       try {
         const payments = await this.request<CashfreePayment[]>(
@@ -267,6 +277,10 @@ export class CashfreeProvider implements PaymentProvider {
         );
         const settled = payments.find((p) => p.payment_status === 'SUCCESS');
         providerPaymentId = settled ? String(settled.cf_payment_id) : null;
+        // A COD selection also comes back as a SUCCESS payment on a PAID
+        // order — `payment_group` is the only thing distinguishing "cash owed
+        // on delivery" from money actually received.
+        isCashOnDelivery = settled?.payment_group?.toLowerCase() === COD_PAYMENT_GROUP;
       } catch (err) {
         // The order is still authoritatively PAID even if this lookup fails;
         // only the reconciliation reference is missing.
@@ -279,6 +293,7 @@ export class CashfreeProvider implements PaymentProvider {
       providerPaymentId,
       amountPaise: typeof order.order_amount === 'number' ? Math.round(order.order_amount * 100) : null,
       failureReason: order.order_status === 'EXPIRED' ? 'Checkout session expired.' : undefined,
+      isCashOnDelivery,
       raw: order,
     };
   }
@@ -325,14 +340,33 @@ export class CashfreeProvider implements PaymentProvider {
 
       const digits = (v?: string | null) => (v ?? '').replace(/\D/g, '').slice(-10) || null;
 
+      // `customer_details` on an OCC order is Cashfree's own synthetic
+      // profile, not what the customer typed: observed in production as
+      // name "Cashfree Customer" and email "9999999999@cashfree.com". The
+      // address block carries the real values, so it wins — and the
+      // synthetic ones are discarded rather than merely deprioritised, or a
+      // missing address field would fall back onto junk that then becomes
+      // the order's contact email and never reaches anyone.
+      const realEmail = (v?: string | null) => {
+        const trimmed = v?.trim().toLowerCase() || null;
+        if (!trimmed || SYNTHETIC_EMAIL.test(trimmed)) return null;
+        return trimmed;
+      };
+      const realName = (v?: string | null) => {
+        const trimmed = v?.trim() || null;
+        return !trimmed || SYNTHETIC_NAME.test(trimmed) ? null : trimmed;
+      };
+
+      const email = realEmail(addr?.email) ?? realEmail(customer?.customer_email);
+
       return {
         // A pincode is the one field fulfilment cannot proceed without, so an
         // address lacking it is treated as absent rather than partially usable.
         address: addr?.pin_code
           ? {
-              fullName: addr.name ?? customer?.customer_name ?? 'Customer',
+              fullName: realName(addr.name) ?? realName(customer?.customer_name) ?? 'Customer',
               phone: digits(addr.phone ?? customer?.customer_phone) ?? '',
-              email: addr.email ?? customer?.customer_email ?? null,
+              email,
               line1: addr.address_line_one ?? '',
               line2: addr.address_line_two ?? null,
               city: addr.city ?? '',
@@ -341,8 +375,8 @@ export class CashfreeProvider implements PaymentProvider {
               country: addr.country ?? 'India',
             }
           : null,
-        customerEmail: customer?.customer_email ?? addr?.email ?? null,
-        customerPhone: digits(customer?.customer_phone ?? addr?.phone),
+        customerEmail: email,
+        customerPhone: digits(addr?.phone ?? customer?.customer_phone),
       };
     } catch (err) {
       console.error('[cashfree] fetching collected details failed', err);
@@ -377,7 +411,12 @@ export class CashfreeProvider implements PaymentProvider {
       event_time?: string;
       data?: {
         order?: { order_id?: string; order_amount?: number };
-        payment?: { cf_payment_id?: number | string; payment_status?: CashfreePaymentStatus; payment_amount?: number };
+        payment?: {
+          cf_payment_id?: number | string;
+          payment_status?: CashfreePaymentStatus;
+          payment_amount?: number;
+          payment_group?: string;
+        };
       };
     };
     try {
@@ -402,6 +441,7 @@ export class CashfreeProvider implements PaymentProvider {
       status: payment?.payment_status ? mapPaymentStatus(payment.payment_status) : null,
       providerPaymentId: payment?.cf_payment_id != null ? String(payment.cf_payment_id) : null,
       amountPaise: typeof payment?.payment_amount === 'number' ? Math.round(payment.payment_amount * 100) : null,
+      isCashOnDelivery: payment?.payment_group?.toLowerCase() === COD_PAYMENT_GROUP,
       signatureOk,
       raw: body,
     };

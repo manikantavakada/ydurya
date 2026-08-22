@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { AppError, notFound } from '@/lib/errors';
 import { env } from '@/lib/env';
 import { toDecimal, toPaise } from '@/lib/money';
+import { isPlaceholder } from '@/lib/checkout/placeholders';
 import { CashfreeProvider } from './payment/cashfree.provider';
 import { FastrrProvider } from './payment/fastrr.provider';
 import { ManualProvider } from './payment/manual.provider';
@@ -116,12 +117,23 @@ export const PaymentService = {
    * unsigned webhook) merely triggers this check, it is never itself believed.
    */
   async verifyAndSettle(orderId: string): Promise<{ status: PaymentStatus; settled: boolean }> {
+    // Any gateway attempt, not strictly a PREPAID one: a One Click Checkout
+    // order that the customer completed as COD has already had its payment
+    // row flipped to COD by whichever path settled first, and the browser's
+    // return-URL verify must still find it rather than 404.
     const payment = await prisma.payment.findFirst({
-      where: { orderId, method: PaymentMethod.PREPAID },
+      where: { orderId, providerOrderId: { not: null } },
       orderBy: { createdAt: 'desc' },
     });
     if (!payment?.providerOrderId) throw notFound('No payment attempt found for this order.');
-    if (payment.status === PaymentStatus.PAID) return { status: PaymentStatus.PAID, settled: false };
+
+    // Already settled by the webhook. Re-run the address capture anyway —
+    // it is idempotent, and it heals an order settled before this app knew
+    // to collect those details on the webhook path.
+    if (payment.status === PaymentStatus.PAID || payment.method === PaymentMethod.COD) {
+      await this.captureCollectedAddress(orderId, payment.providerOrderId);
+      return { status: payment.status, settled: false };
+    }
 
     const result = await paymentProvider().verifyPayment(payment.providerOrderId);
 
@@ -141,14 +153,20 @@ export const PaymentService = {
       }
     }
 
+    const isCod = result.status === PaymentStatus.PAID && Boolean(result.isCashOnDelivery);
+
     await prisma.payment.update({
       where: { id: payment.id },
       data: {
-        status: result.status,
+        // A COD selection is an accepted order, not a received payment: the
+        // payment row stays PENDING with no paidAt, exactly as a COD order
+        // placed through our own checkout form does.
+        method: isCod ? PaymentMethod.COD : undefined,
+        status: isCod ? PaymentStatus.PENDING : result.status,
         providerPaymentId: result.providerPaymentId ?? undefined,
         failureReason: result.failureReason,
         providerPayload: result.raw as Prisma.InputJsonValue,
-        paidAt: result.status === PaymentStatus.PAID ? new Date() : null,
+        paidAt: result.status === PaymentStatus.PAID && !isCod ? new Date() : null,
       },
     });
 
@@ -160,8 +178,13 @@ export const PaymentService = {
       await this.captureCollectedAddress(orderId, payment.providerOrderId);
 
       const { OrderService } = await import('./order.service');
-      await OrderService.markPaid(orderId, 'gateway-verify');
-      return { status: result.status, settled: true };
+      if (isCod) {
+        await prisma.order.update({ where: { id: orderId }, data: { paymentMethod: PaymentMethod.COD } });
+        await OrderService.markPaid(orderId, 'gateway-verify', 'Cash on delivery order confirmed.');
+      } else {
+        await OrderService.markPaid(orderId, 'gateway-verify');
+      }
+      return { status: isCod ? PaymentStatus.PENDING : result.status, settled: true };
     }
     if (result.status === PaymentStatus.FAILED) {
       const { OrderService } = await import('./order.service');
@@ -236,21 +259,42 @@ export const PaymentService = {
     }
 
     const payment = order.payments[0];
+    const isCod = parsed.status === PaymentStatus.PAID && Boolean(parsed.isCashOnDelivery);
+
     if (payment) {
       await prisma.payment.update({
         where: { id: payment.id },
         data: {
-          status: parsed.status,
+          // See `verifyAndSettle` — a COD selection owes cash on delivery
+          // and must never be recorded as money already received.
+          method: isCod ? PaymentMethod.COD : undefined,
+          status: isCod ? PaymentStatus.PENDING : parsed.status,
           providerPaymentId: parsed.providerPaymentId ?? undefined,
           providerPayload: parsed.raw as Prisma.InputJsonValue,
-          paidAt: parsed.status === PaymentStatus.PAID ? new Date() : payment.paidAt,
+          paidAt: parsed.status === PaymentStatus.PAID && !isCod ? new Date() : payment.paidAt,
         },
       });
     }
 
     const { OrderService } = await import('./order.service');
-    if (parsed.status === PaymentStatus.PAID) await OrderService.markPaid(order.id, 'payment-webhook');
-    else if (parsed.status === PaymentStatus.FAILED) await OrderService.markPaymentFailed(order.id, 'Payment failed at gateway.');
+    if (parsed.status === PaymentStatus.PAID) {
+      // Cashfree's webhook almost always beats the browser's return-URL
+      // verify, and this path previously confirmed the order without ever
+      // asking Cashfree for the address and contact details One Click
+      // Checkout collected — leaving fulfilment with a confirmed order and
+      // no idea who or where to ship it. Captured here for exactly the same
+      // reason `verifyAndSettle` does it.
+      await this.captureCollectedAddress(order.id, payment?.providerOrderId ?? parsed.providerOrderId);
+
+      if (isCod) {
+        await prisma.order.update({ where: { id: order.id }, data: { paymentMethod: PaymentMethod.COD } });
+        await OrderService.markPaid(order.id, 'payment-webhook', 'Cash on delivery order confirmed.');
+      } else {
+        await OrderService.markPaid(order.id, 'payment-webhook');
+      }
+    } else if (parsed.status === PaymentStatus.FAILED) {
+      await OrderService.markPaymentFailed(order.id, 'Payment failed at gateway.');
+    }
 
     await prisma.webhookEvent.update({ where: { id: eventId }, data: { processedAt: new Date() } });
     return { handled: true };
@@ -314,7 +358,7 @@ export const PaymentService = {
     try {
       const order = await prisma.order.findUnique({
         where: { id: orderId },
-        select: { addressSnapshot: true },
+        select: { addressSnapshot: true, email: true, phone: true, userId: true },
       });
 
       // Never overwrite an address the customer gave us directly — a signed-in
@@ -337,13 +381,18 @@ export const PaymentService = {
             : {}),
           // A guest's real contact details only exist once Cashfree has them.
           // Written over the placeholders the express route opened with, so
-          // order tracking and delivery updates reach the actual customer.
-          ...(customerEmail ? { email: customerEmail } : {}),
-          ...(collected.customerPhone ? { phone: collected.customerPhone } : {}),
+          // order tracking and delivery updates reach the actual customer —
+          // but only over a placeholder: a signed-in customer's own account
+          // email is more authoritative than whatever was typed into the
+          // gateway's address form, and must not be replaced by it.
+          ...(customerEmail && isPlaceholder(order?.email) ? { email: customerEmail } : {}),
+          ...(collected.customerPhone && isPlaceholder(order?.phone) ? { phone: collected.customerPhone } : {}),
         },
       });
 
-      if (customerEmail) {
+      // Only a guest order needs claiming, and only against the email that
+      // was actually written onto it above.
+      if (customerEmail && !order?.userId && isPlaceholder(order?.email)) {
         const customer = await prisma.user.findUnique({
           where: { email: customerEmail },
           select: { id: true, isActive: true, deletedAt: true },

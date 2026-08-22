@@ -294,7 +294,7 @@ export const OrderService = {
    * Confirms a prepaid order once payment is verified server-side.
    * Idempotent — a webhook and a return-URL verify can both call it.
    */
-  async markPaid(orderId: string, source: string): Promise<void> {
+  async markPaid(orderId: string, source: string, message = 'Payment received.'): Promise<void> {
     await prisma.$transaction(async (tx) => {
       const order = await tx.order.findUnique({
         where: { id: orderId },
@@ -316,7 +316,7 @@ export const OrderService = {
         data: { status: OrderStatus.CONFIRMED, confirmedAt: new Date() },
       });
       await tx.orderEvent.create({
-        data: { orderId: order.id, status: OrderStatus.CONFIRMED, message: 'Payment received.', source },
+        data: { orderId: order.id, status: OrderStatus.CONFIRMED, message, source },
       });
 
       // The bag was deliberately left alone at checkout for a prepaid order —
