@@ -15,7 +15,7 @@ export const BRAND = {
   city: 'Visakhapatnam',
   country: 'India',
   instagram: 'https://www.instagram.com/ydurya_?igsi=d2FldGg5bWVoaHIy',
-  email: 'lankaravanaaa1234@gmail.com',
+  email: 'Yduryabusiness@gmail.com',
   /** Digits only, no leading +, for wa.me links. */
   whatsappNumber: '916309636534',
   phoneDisplay: '+91 63096 36534',
