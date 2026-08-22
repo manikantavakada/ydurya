@@ -15,29 +15,18 @@ import type { ProductListResult } from '@/types';
  */
 export function ListingPage({
   title,
-  eyebrow,
   description,
   listing,
   breadcrumbs,
   listName,
   showCategoryFilter = true,
-  /**
-   * Visually hides the heading and style count — the breadcrumb ("Shop")
-   * already says where you are on the plain "Shop all" page, so a second
-   * repeat of it right below was just extra height with nothing new to say.
-   * The h1 stays in the markup (sr-only) rather than disappearing outright,
-   * since a listing page still needs one for screen readers and SEO.
-   */
-  hideHeading = false,
 }: {
   title: string;
-  eyebrow?: string;
   description?: string;
   listing: ProductListResult;
   breadcrumbs: { name: string; href: string }[];
   listName: string;
   showCategoryFilter?: boolean;
-  hideHeading?: boolean;
 }) {
   return (
     <div className="container py-4 lg:py-6">
@@ -56,10 +45,17 @@ export function ListingPage({
         </ol>
       </nav>
 
-      <header className={hideHeading ? 'mb-2' : 'mb-4'}>
-        {!hideHeading && eyebrow && <p className="eyebrow mb-1.5">{eyebrow}</p>}
+      {/*
+       * Title, count and eyebrow are visually hidden on every listing page —
+       * the breadcrumb right above already says where you are (Shop, or
+       * Shop > Fresh Arrivals), so repeating it as a heading was just extra
+       * height with nothing new to say. The h1 stays in the markup (sr-only)
+       * rather than disappearing outright, since the page still needs one
+       * for screen readers and SEO.
+       */}
+      <header className="mb-2">
         <div className="flex flex-wrap items-end justify-between gap-4">
-          <div className={hideHeading ? 'sr-only' : undefined}>
+          <div className="sr-only">
             <h1 className="text-3xl md:text-4xl">{title}</h1>
             {description && <p className="mt-1 text-sm text-muted">{description}</p>}
           </div>

@@ -58,7 +58,6 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
   return (
     <ListingPage
       title={`“${term}”`}
-      eyebrow="Search results"
       description={`${listing.total} ${listing.total === 1 ? 'result' : 'results'}`}
       listing={listing}
       breadcrumbs={[{ name: 'Home', href: '/' }, { name: 'Search', href: '/search' }]}

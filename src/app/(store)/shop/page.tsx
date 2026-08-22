@@ -68,7 +68,6 @@ async function ShopContent({ raw }: { raw: Record<string, string | string[] | un
   return (
     <ListingPage
       title={heading.title}
-      eyebrow={heading.eyebrow}
       description={`${listing.total} ${listing.total === 1 ? 'style' : 'styles'}`}
       listing={listing}
       breadcrumbs={[
@@ -77,7 +76,6 @@ async function ShopContent({ raw }: { raw: Record<string, string | string[] | un
         ...(q.collection ? [{ name: heading.title, href: `/shop?collection=${q.collection}` }] : []),
       ]}
       listName={heading.title}
-      hideHeading={!q.collection}
     />
   );
 }
