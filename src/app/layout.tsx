@@ -69,6 +69,10 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  // Pinch-to-zoom disabled for the app-like feel most storefronts on phones
+  // go for. Product photography already has its own zoom on the PDP gallery.
+  maximumScale: 1,
+  userScalable: false,
   viewportFit: 'cover',
   themeColor: BRAND_COLORS.background,
 };

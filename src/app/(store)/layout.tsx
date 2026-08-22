@@ -7,7 +7,6 @@ import { HomepageService } from '@/services/homepage.service';
 import { WishlistService } from '@/services/wishlist.service';
 import { getCurrentUser } from '@/lib/auth/session';
 import { OrganizationJsonLd } from '@/components/seo/json-ld';
-import type { CategoryDTO } from '@/types';
 
 /**
  * Storefront shell.
@@ -16,8 +15,7 @@ import type { CategoryDTO } from '@/types';
  * the initial HTML — nothing to fetch, nothing to shift after hydration.
  */
 export default async function StoreLayout({ children }: { children: React.ReactNode }) {
-  const [categories, navCandidates, user, sections] = await Promise.all([
-    CategoryService.listVisible(),
+  const [navCandidates, user, sections] = await Promise.all([
     CategoryService.navCandidates(),
     getCurrentUser(),
     HomepageService.getSections(),
@@ -55,10 +53,6 @@ export default async function StoreLayout({ children }: { children: React.ReactN
     { slug: 'bottoms', label: 'Bottoms' },
   ];
 
-  const occasion: CategoryDTO[] = categories.filter((c) =>
-    ['casual-wear', 'weekend-stylish', 'exam-wear', 'interview-wear', 'parties-fests', 'sports-wear'].includes(c.slug),
-  );
-
   const navItems: HeaderNavItem[] = [
     ...primary
       .filter((p) => {
@@ -67,7 +61,6 @@ export default async function StoreLayout({ children }: { children: React.ReactN
       })
       .map((p) => ({ label: p.label, href: `/category/${p.slug}` })),
     { label: 'Shop All', href: '/shop' },
-    ...(occasion.length ? [{ label: 'College Wear', href: '/shop', children: occasion }] : []),
   ];
 
   return (
