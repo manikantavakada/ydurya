@@ -10,29 +10,32 @@ export const dynamic = 'force-dynamic';
 // route timeout on a small Node instance.
 export const maxDuration = 120;
 
-const MAX_CSV_BYTES = 2 * 1024 * 1024;
+const MAX_SHEET_BYTES = 5 * 1024 * 1024;
 const MAX_ZIP_BYTES = 200 * 1024 * 1024;
+const EXCEL_EXTENSIONS = /\.xlsx?$/i;
 
 /**
- * POST /api/admin/products/bulk-import — CSV (+ optional ZIP of images),
- * one row per product. Entirely separate from the single-product create/edit
- * routes; nothing here is reused by or shared with them.
+ * POST /api/admin/products/bulk-import — a CSV or Excel sheet (+ optional
+ * ZIP of images), one row per product. Entirely separate from the
+ * single-product create/edit routes; nothing here is reused by or shared
+ * with them.
  */
 export const POST = withErrorHandling(async (req: NextRequest) => {
   const actor = await requirePermission('products.write');
 
   const form = await req.formData();
-  const csvFile = form.get('csv');
+  const sheetFile = form.get('csv');
   const zipFile = form.get('images');
 
-  if (!(csvFile instanceof File)) throw badRequest('A CSV file is required.');
-  if (csvFile.size > MAX_CSV_BYTES) throw badRequest('CSV is too large.');
+  if (!(sheetFile instanceof File)) throw badRequest('A CSV or Excel file is required.');
+  if (sheetFile.size > MAX_SHEET_BYTES) throw badRequest('File is too large.');
   if (zipFile instanceof File && zipFile.size > MAX_ZIP_BYTES) throw badRequest('Image ZIP is too large (200MB max).');
 
-  const csvBuffer = Buffer.from(await csvFile.arrayBuffer());
+  const isExcel = EXCEL_EXTENSIONS.test(sheetFile.name) || sheetFile.type.includes('spreadsheetml');
+  const sheetBuffer = Buffer.from(await sheetFile.arrayBuffer());
   const zipBuffer = zipFile instanceof File && zipFile.size > 0 ? Buffer.from(await zipFile.arrayBuffer()) : null;
 
-  const summary = await BulkImportService.importProducts(csvBuffer, zipBuffer);
+  const summary = await BulkImportService.importProducts(sheetBuffer, isExcel, zipBuffer);
 
   await AuditService.log({
     actorId: actor.id,

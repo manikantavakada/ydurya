@@ -1,5 +1,6 @@
 import 'server-only';
 import { parse } from 'csv-parse/sync';
+import * as XLSX from 'xlsx';
 import AdmZip from 'adm-zip';
 import { Prisma, ProductStatus } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
@@ -7,11 +8,12 @@ import { slugify } from '@/lib/utils';
 import { MediaService } from './media.service';
 
 /**
- * Bulk product import from a CSV + a ZIP of images — entirely separate from
- * the one-by-one Admin → Products form, which this never touches. One row
- * is one product; images are matched by filename against entries in the ZIP,
- * and variants are packed into a single delimited column so the sheet stays
- * one row per product rather than one row per size/colour.
+ * Bulk product import from a spreadsheet (CSV or Excel) + a ZIP of images —
+ * entirely separate from the one-by-one Admin → Products form, which this
+ * never touches. One row is one product; images are matched by filename
+ * against entries in the ZIP, and variants are packed into a single
+ * delimited column so the sheet stays one row per product rather than one
+ * row per size/colour.
  *
  * Never partially creates a product: each row runs in its own transaction,
  * so a bad row is skipped and reported without leaving an orphaned product
@@ -72,13 +74,40 @@ function parseVariants(raw: string): { sizeCode: string; colorSlug: string; stoc
     });
 }
 
-export const BulkImportService = {
-  async importProducts(csvBuffer: Buffer, zipBuffer: Buffer | null): Promise<BulkImportSummary> {
-    const rows: CsvRow[] = parse(csvBuffer, {
-      columns: (header: string[]) => header.map((h) => h.trim().toLowerCase().replace(/\s+/g, '_')),
+const normalizeHeader = (h: string) => h.trim().toLowerCase().replace(/\s+/g, '_');
+
+/**
+ * Excel cells come back as whatever native type the sheet holds — numbers,
+ * dates, booleans — but every downstream check (`row.price?.trim()`, etc.)
+ * expects a string, the same as csv-parse always returns. Coercing here
+ * once means the row-processing logic below never has to care which format
+ * the sheet came in as.
+ */
+function parseSpreadsheet(buffer: Buffer, isExcel: boolean): CsvRow[] {
+  if (!isExcel) {
+    return parse(buffer, {
+      columns: (header: string[]) => header.map(normalizeHeader),
       skip_empty_lines: true,
       trim: true,
     });
+  }
+
+  const workbook = XLSX.read(buffer, { type: 'buffer' });
+  const sheet = workbook.Sheets[workbook.SheetNames[0]];
+  const raw = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: '' });
+
+  return raw.map((rawRow) => {
+    const row: Record<string, string> = {};
+    for (const [key, value] of Object.entries(rawRow)) {
+      row[normalizeHeader(key)] = value == null ? '' : String(value).trim();
+    }
+    return row as CsvRow;
+  });
+}
+
+export const BulkImportService = {
+  async importProducts(fileBuffer: Buffer, isExcel: boolean, zipBuffer: Buffer | null): Promise<BulkImportSummary> {
+    const rows: CsvRow[] = parseSpreadsheet(fileBuffer, isExcel);
 
     const [sizes, colors, categories] = await Promise.all([
       prisma.size.findMany({ select: { id: true, code: true } }),

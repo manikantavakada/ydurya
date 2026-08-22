@@ -56,7 +56,7 @@ export function BulkImportForm() {
       <section className="rounded-lg border border-line p-5">
         <h2 className="mb-3 font-serif text-lg">How it works</h2>
         <ol className="list-decimal space-y-2 pl-5 text-sm text-muted">
-          <li>Download the template below and fill in one row per product.</li>
+          <li>Download the template below (CSV or Excel — same columns either way) and fill in one row per product.</li>
           <li>
             <strong className="text-ink">variants</strong> packs size, colour and stock into one column:{' '}
             <code className="rounded bg-surface px-1 py-0.5 text-2xs">S:Black:20;M:Black:15;L:White:10</code>
@@ -69,13 +69,22 @@ export function BulkImportForm() {
           <li>Products are created as <strong className="text-ink">drafts</strong> unless the status column says otherwise — review and publish from the products list.</li>
         </ol>
 
-        <Link
-          href="/api/admin/products/bulk-import/template"
-          className="mt-4 inline-flex h-9 items-center gap-2 rounded-md border border-ink/25 px-3 text-xs uppercase tracking-wide2 hover:border-ink"
-        >
-          <Download className="h-3.5 w-3.5" aria-hidden />
-          Download CSV template
-        </Link>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Link
+            href="/api/admin/products/bulk-import/template?format=xlsx"
+            className="inline-flex h-9 items-center gap-2 rounded-md border border-ink/25 px-3 text-xs uppercase tracking-wide2 hover:border-ink"
+          >
+            <Download className="h-3.5 w-3.5" aria-hidden />
+            Excel template
+          </Link>
+          <Link
+            href="/api/admin/products/bulk-import/template"
+            className="inline-flex h-9 items-center gap-2 rounded-md border border-ink/25 px-3 text-xs uppercase tracking-wide2 hover:border-ink"
+          >
+            <Download className="h-3.5 w-3.5" aria-hidden />
+            CSV template
+          </Link>
+        </div>
       </section>
 
       <section className="space-y-4 rounded-lg border border-line p-5">
@@ -83,10 +92,10 @@ export function BulkImportForm() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block">
-            <span className="mb-1.5 block text-xs font-medium text-ink">Product CSV *</span>
+            <span className="mb-1.5 block text-xs font-medium text-ink">Product sheet (CSV or Excel) *</span>
             <input
               type="file"
-              accept=".csv,text/csv"
+              accept=".csv,text/csv,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
               onChange={(e) => setCsvFile(e.target.files?.[0] ?? null)}
               className="block w-full text-sm file:mr-3 file:h-9 file:rounded-md file:border file:border-ink/25 file:bg-bg file:px-3 file:text-xs file:uppercase file:tracking-wide2 hover:file:border-ink"
             />
