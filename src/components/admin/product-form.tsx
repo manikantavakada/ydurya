@@ -56,6 +56,7 @@ export function ProductForm({
 
   const [images, setImages] = React.useState(data.images);
   const [uploading, setUploading] = React.useState(false);
+  const [uploadingSizeChart, setUploadingSizeChart] = React.useState(false);
   const [selectedCategories, setSelectedCategories] = React.useState<string[]>(data.values.categoryIds ?? []);
 
   const form = useForm<FormValues>({
@@ -64,6 +65,7 @@ export function ProductForm({
   });
 
   const name = form.watch('name');
+  const sizeChartImage = form.watch('sizeChartImage');
 
   const save = form.handleSubmit(async (values) => {
     const payload = { ...values, categoryIds: selectedCategories };
@@ -127,6 +129,32 @@ export function ProductForm({
       toast({ title: err instanceof Error ? err.message : 'Upload failed.', variant: 'error' });
     } finally {
       setUploading(false);
+    }
+  };
+
+  /**
+   * Unlike gallery images, this is just a field on the product record — the
+   * file uploads immediately, but the URL only saves when the form does, so
+   * it can be set before the product itself has ever been saved.
+   */
+  const uploadSizeChart = async (file: File) => {
+    setUploadingSizeChart(true);
+    try {
+      const body = new FormData();
+      body.append('file', file);
+      body.append('folder', 'size-charts');
+      body.append('name', slugify(name || 'product'));
+
+      const upload = await fetch('/api/admin/media', { method: 'POST', body });
+      const stored = await upload.json().catch(() => ({}));
+      if (!upload.ok) throw new Error(stored?.error?.message ?? 'Upload failed.');
+
+      form.setValue('sizeChartImage', stored.url, { shouldDirty: true });
+      toast({ title: 'Size chart uploaded — save the product to keep it', variant: 'success' });
+    } catch (err) {
+      toast({ title: err instanceof Error ? err.message : 'Upload failed.', variant: 'error' });
+    } finally {
+      setUploadingSizeChart(false);
     }
   };
 
@@ -239,6 +267,51 @@ export function ProductForm({
                 <Input {...form.register('fit')} />
               </Field>
             </div>
+
+            <Field
+              label="Size chart"
+              htmlFor="p-size-chart"
+              hint="Optional — a shirt and a kurta measure up differently. Falls back to the brand's default chart when not set."
+            >
+              <div className="flex items-center gap-3">
+                {sizeChartImage && (
+                  <Image
+                    src={sizeChartImage}
+                    alt=""
+                    width={80}
+                    height={52}
+                    className="h-13 w-20 shrink-0 rounded border border-line object-cover"
+                  />
+                )}
+                <label className="cursor-pointer">
+                  <input
+                    id="p-size-chart"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/avif"
+                    className="sr-only"
+                    disabled={uploadingSizeChart}
+                    onChange={(e) => e.target.files?.[0] && uploadSizeChart(e.target.files[0])}
+                  />
+                  <span
+                    className={`inline-flex h-9 items-center gap-2 rounded-md border border-ink/25 px-3 text-xs uppercase tracking-wide2 ${
+                      uploadingSizeChart ? 'opacity-50' : 'hover:border-ink'
+                    }`}
+                  >
+                    <Upload className="h-3.5 w-3.5" aria-hidden />
+                    {uploadingSizeChart ? 'Uploading…' : sizeChartImage ? 'Replace' : 'Upload'}
+                  </span>
+                </label>
+                {sizeChartImage && (
+                  <button
+                    type="button"
+                    onClick={() => form.setValue('sizeChartImage', '', { shouldDirty: true })}
+                    className="text-2xs uppercase tracking-wide2 text-muted hover:text-danger"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            </Field>
           </section>
 
           {/* ── Images ────────────────────────────────────────────────── */}

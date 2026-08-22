@@ -61,6 +61,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
           description: product.description ?? '',
           fabric: product.fabric ?? '',
           fit: product.fit ?? '',
+          sizeChartImage: product.sizeChartImage ?? '',
           price: Number(product.price),
           compareAtPrice: product.compareAtPrice ? Number(product.compareAtPrice) : null,
           status: product.status,

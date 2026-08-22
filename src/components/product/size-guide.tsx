@@ -8,12 +8,14 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 /**
  * Size guide.
  *
- * The measurement chart is YDURYA's own — brand size against chest, shoulder,
- * front length and sleeve length in inches, with the ± 0.5" tolerance from
- * manual measurement. The fit language below it explains the cut, not the
- * numbers, so both stay useful together.
+ * A garment-specific chart (uploaded per product in Admin → Products, since
+ * a shirt and a kurta measure up differently) takes priority; otherwise this
+ * falls back to YDURYA's default chart — brand size against chest, shoulder,
+ * front length and sleeve length in inches, ± 0.5" tolerance from manual
+ * measurement. The fit language below it explains the cut, not the numbers,
+ * so both stay useful together.
  */
-export function SizeGuide({ fit }: { fit?: string | null }) {
+export function SizeGuide({ fit, chartImage }: { fit?: string | null; chartImage?: string | null }) {
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -28,15 +30,18 @@ export function SizeGuide({ fit }: { fit?: string | null }) {
 
       <SheetContent side="bottom" title="Size guide" className="lg:inset-y-0 lg:right-0 lg:left-auto lg:max-h-none lg:max-w-md lg:rounded-none">
         <div className="space-y-6 pb-4">
-          <div className="relative aspect-[1200/734] w-full overflow-hidden rounded-md bg-surface">
-            <Image
-              src="/images/brand/size-chart.webp"
-              alt="YDURYA size chart — brand size against chest, shoulder, front length and sleeve length in inches, ± 0.5 inch tolerance"
-              fill
-              sizes="(min-width:1024px) 448px, 100vw"
-              className="object-contain"
-            />
-          </div>
+          <Image
+            src={chartImage || '/images/brand/size-chart.webp'}
+            alt={
+              chartImage
+                ? 'Size chart for this style — brand size against body measurements in inches'
+                : 'YDURYA size chart — brand size against chest, shoulder, front length and sleeve length in inches, ± 0.5 inch tolerance'
+            }
+            width={1200}
+            height={800}
+            sizes="(min-width:1024px) 448px, 100vw"
+            className="h-auto w-full rounded-md bg-surface"
+          />
 
           {fit && (
             <div>

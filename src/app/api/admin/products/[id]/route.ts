@@ -46,6 +46,7 @@ export const PATCH = withErrorHandling(async (req: NextRequest, ctx: Ctx) => {
         details: (body.details ?? []) as unknown as Prisma.InputJsonValue,
         fabric: body.fabric ?? null,
         fit: body.fit ?? null,
+        sizeChartImage: body.sizeChartImage ?? null,
         price: new Prisma.Decimal(body.price),
         compareAtPrice: body.compareAtPrice ? new Prisma.Decimal(body.compareAtPrice) : null,
         status: body.status as ProductStatus,

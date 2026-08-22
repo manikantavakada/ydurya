@@ -26,7 +26,7 @@ export default async function NewProductPage() {
         variants: [],
         values: {
           name: '', slug: '', subtitle: '', description: '',
-          fabric: '', fit: '', price: 0, compareAtPrice: null,
+          fabric: '', fit: '', sizeChartImage: '', price: 0, compareAtPrice: null,
           status: 'DRAFT', categoryIds: [],
           isFeatured: false, isNewArrival: false, isBestSeller: false,
           metaTitle: '', metaDescription: '',

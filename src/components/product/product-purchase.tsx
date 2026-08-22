@@ -117,7 +117,7 @@ export function ProductPurchase({
             <p className="eyebrow">
               Size{selected?.size ? <span className="ml-1.5 text-ink">{selected.size.label}</span> : ''}
             </p>
-            <SizeGuide fit={product.fit} />
+            <SizeGuide fit={product.fit} chartImage={product.sizeChartImage} />
           </div>
 
           <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Select a size" aria-required="true">

@@ -181,6 +181,7 @@ export const adminProductSchema = z.object({
   details: z.array(z.object({ label: z.string().max(100), value: z.string().max(500) })).optional(),
   fabric: z.string().trim().max(150).optional().nullable(),
   fit: z.string().trim().max(100).optional().nullable(),
+  sizeChartImage: z.string().trim().max(512).optional().nullable(),
   price: z.coerce.number().min(0).max(10_000_000),
   compareAtPrice: z.coerce.number().min(0).max(10_000_000).optional().nullable(),
   status: z.enum(['DRAFT', 'ACTIVE', 'ARCHIVED']),

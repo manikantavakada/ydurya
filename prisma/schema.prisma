@@ -158,6 +158,10 @@ model Product {
   details      Json?
   fabric       String?       @db.VarChar(150)
   fit          String?       @db.VarChar(100)
+  /// Per-product measurement chart — a shirt and a kurta fit differently
+  /// enough that one global chart is wrong for most products. Falls back to
+  /// the brand's default chart when not set.
+  sizeChartImage String?     @db.VarChar(512)
   vendor       String        @default("YDURYA") @db.VarChar(100)
   status       ProductStatus @default(DRAFT)
 

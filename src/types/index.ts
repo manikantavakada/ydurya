@@ -76,6 +76,7 @@ export interface ProductDetailDTO extends ProductCardDTO {
   details: { label: string; value: string }[];
   fabric: string | null;
   fit: string | null;
+  sizeChartImage: string | null;
   images: ProductImageDTO[];
   variants: VariantDTO[];
   categories: { id: string; slug: string; name: string }[];
