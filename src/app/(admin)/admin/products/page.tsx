@@ -60,12 +60,17 @@ export default async function AdminProductsPage({
           <h1 className="font-serif text-2xl">Products</h1>
           <p className="mt-1 text-sm text-muted">{total} product{total === 1 ? '' : 's'}</p>
         </div>
-        <Button asChild>
-          <Link href="/admin/products/new">
-            <Plus className="h-4 w-4" aria-hidden />
-            New product
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button asChild variant="outline">
+            <Link href="/admin/products/import">Bulk import</Link>
+          </Button>
+          <Button asChild>
+            <Link href="/admin/products/new">
+              <Plus className="h-4 w-4" aria-hidden />
+              New product
+            </Link>
+          </Button>
+        </div>
       </header>
 
       <AdminFilterBar
